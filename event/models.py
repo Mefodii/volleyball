@@ -6,19 +6,18 @@ from django.contrib.auth.models import User
 # Create your models here.
 class Voleibalist(models.Model):
     name = models.CharField(max_length=100,
-                            related_name="player_name",
-                            verbose_name="Voleibalist Name", )
+                            verbose_name="Voleibalist Name")
     alias = models.CharField(max_length=100,
-                             related_name="player_alias",
-                             verbose_name="Voleibalist Alias", )
+                             verbose_name="Voleibalist Alias")
     user = models.ForeignKey(User,
-                             verbose_name="related_db_user",
-                             on_delete=models.CASCADE)
+                             verbose_name="Registered User",
+                             on_delete=models.CASCADE,
+                             blank=True,
+                             null=True)
 
 
 class Event(models.Model):
     name = models.CharField(max_length=300,
-                            related_name="title",
                             verbose_name="Event Name",
                             help_text="Write name of the Event")
     date = models.DateTimeField()
