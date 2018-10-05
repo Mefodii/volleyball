@@ -25,5 +25,5 @@ class Event(models.Model):
                                    decimal_places=1)
     price_per_hour = models.DecimalField(max_digits=5,
                                          decimal_places=1)
-    # TBD
-    # Payments
+    payments = models.ManyToManyField("accounting.Payment",
+                                      blank=True)
