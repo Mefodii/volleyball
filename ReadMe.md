@@ -78,6 +78,7 @@
 <h4>Other dependent packages</h4>
 
 <h5>Create requirements file</h5>
+
 - Activate venv
 - CD to project location
 - Execute command:
@@ -85,6 +86,7 @@
  
  
 <h5>Install requirements file</h5>
+
 - Activate venv
 - Execute command:
  > pip install -r requirements.txt
