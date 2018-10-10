@@ -83,10 +83,12 @@
 - Execute command:
  > pip freeze > requirements.txt
  
+ 
 <h5>Install requirements file</h5>
 - Activate venv
 - Execute command:
  > pip install -r requirements.txt
+ 
 
 <h5>Install Django Rest</h5>
 
