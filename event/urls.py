@@ -3,12 +3,12 @@ from django.urls import path
 
 from rest_framework.routers import DefaultRouter
 
-from .api import VoleibalistViewSet, EventViewSet, add_event
+from .api import VoleibalistViewSet, EventList, EventDetail
 
 router = DefaultRouter()
 router.register("voleibalists", VoleibalistViewSet)
-router.register("events", EventViewSet)
 
 urlpatterns = [
-    path("add_event/", add_event),
+    path("events/", EventList.as_view()),
+    path("events/<int:pk>/", EventDetail.as_view()),
 ] + router.urls

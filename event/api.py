@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework import permissions, generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -11,21 +12,14 @@ from .models import Voleibalist, Event
 from .serializers import VoleibalistSerializer, EventSerializer
 
 
-class VoleibalistViewSet(ModelViewSet):
-    queryset = Voleibalist.objects.all()
-    serializer_class = VoleibalistSerializer
-    # permission_classes = (permissions.IsAuthenticated,)
+class EventList(APIView):
 
+    def get(self, request, format=None):
+        events = Event.objects.all()
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
 
-class EventViewSet(ModelViewSet):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    # permission_classes = (permissions.IsAuthenticated,)
-
-
-@api_view(['POST'])
-def add_event(request):
-    if request.method == 'POST':
+    def post(self, request, format=None):
         payments = request.data["payments"]
         request.data["payments"] = []
         event_serializer = EventSerializer(data=request.data)
@@ -37,8 +31,38 @@ def add_event(request):
             if payment_serializer.is_valid():
                 payments_instance = payment_serializer.save()
                 event.payments.add(*payments_instance)
-                return Response(request.data, status=status.HTTP_202_ACCEPTED)
+                return Response(request.data, status=status.HTTP_201_CREATED)
             else:
                 event.delete()
                 return Response(payment_serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
         return Response(event_serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+class EventDetail(APIView):
+
+    def get_object(self, pk):
+        return get_object_or_404(Event, pk=pk)
+
+    def get(self, request, pk, format=None):
+        event = self.get_object(pk)
+        serializer = EventSerializer(event)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk, format=None):
+        event = self.get_object(pk)
+        serializer = EventSerializer(event, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        event = self.get_object(pk)
+        event.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class VoleibalistViewSet(ModelViewSet):
+    queryset = Voleibalist.objects.all()
+    serializer_class = VoleibalistSerializer
+    # permission_classes = (permissions.IsAuthenticated,)
