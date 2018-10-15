@@ -54,11 +54,18 @@ class EventDetail(APIView):
         event = self.get_object(pk)
         serializer = EventSerializer(event, data=request.data)
         if serializer.is_valid():
-            payments_serializers = []
+            existing_payments = event.payment_set.all()
+
+            update_payments = []
+            delete_payments = []
+            create_payments = []
+
             payments_id = []
-            for value in payments:
-                if value["id"]:
-                    payments_ids.append(value["id"])
+            for existing_payment in existing_payments:
+                for value in payments:
+                    request_payment_id = value["id"]
+                    if request_payment_id == existing_payment.id:
+                        update_payments.append(existing_payment)
 
             Payment.objects.filter(pk__in=payments_id)
 
