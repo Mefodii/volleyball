@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from accounting.serializers import PaymentSerializer
+from accounting.models import Payment
 
 from .models import Voleibalist, Event
 from .serializers import VoleibalistSerializer, EventSerializer
@@ -29,8 +30,7 @@ class EventList(APIView):
                 value["event_id"] = event.id
             payment_serializer = PaymentSerializer(data=payments, many=True)
             if payment_serializer.is_valid():
-                payments_instance = payment_serializer.save()
-                event.payments.add(*payments_instance)
+                payment_serializer.save()
                 return Response(request.data, status=status.HTTP_201_CREATED)
             else:
                 event.delete()
@@ -49,9 +49,20 @@ class EventDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, format=None):
+        payments = request.data["payments"]
+        request.data["payments"] = []
         event = self.get_object(pk)
         serializer = EventSerializer(event, data=request.data)
         if serializer.is_valid():
+            payments_serializers = []
+            payments_id = []
+            for value in payments:
+                if value["id"]:
+                    payments_ids.append(value["id"])
+
+            Payment.objects.filter(pk__in=payments_id)
+
+
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
