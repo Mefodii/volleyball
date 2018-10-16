@@ -55,27 +55,53 @@ class EventDetail(APIView):
         serializer = EventSerializer(event, data=request.data)
         if serializer.is_valid():
             existing_payments = event.payment_set.all()
+            existing_payments_id = []
+            for existing_payment in existing_payments:
+                existing_payments_id.append(existing_payment.id)
 
             update_payments = []
-            delete_payments = []
             create_payments = []
+            delete_payments = existing_payments_id
 
-            payments_id = []
-            for existing_payment in existing_payments:
-                for value in payments:
-                    request_payment_id = value["id"]
-                    if request_payment_id == existing_payment.id:
-                        update_payments.append(existing_payment)
+            for value in payments:
+                if value.get("id", None):
+                    if value["id"] in delete_payments:
+                        delete_payments.remove(value["id"])
+                        update_payments.append(value)
+                    else:
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    value["event_id"] = event.id
+                    create_payments.append(value)
 
-            Payment.objects.filter(pk__in=payments_id)
+            update_payments_serializer = []
+            for payment in update_payments:
+                payment_instance = get_object_or_404(Payment, pk=payment["id"])
+                payment_serializer = PaymentSerializer(payment_instance, data=payment)
+                if payment_serializer.is_valid():
+                    update_payments_serializer.append(payment_serializer)
+                else:
+                    return Response(payment_serializer.errors,
+                                    status=status.HTTP_400_BAD_REQUEST)
 
+            create_payments_serializer = PaymentSerializer(data=create_payments, many=True)
+            if not create_payments_serializer.is_valid():
+                return Response(create_payments_serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
 
+            Payment.objects.filter(pk__in=delete_payments).delete()
+            for payment_serializer in update_payments_serializer:
+                payment_serializer.save()
+            create_payments_serializer.save()
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         event = self.get_object(pk)
+        existing_payments = event.payment_set.all()
+
+        existing_payments.delete()
         event.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
